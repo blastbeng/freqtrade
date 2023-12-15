@@ -1,4 +1,5 @@
 #!/bin/bash
+export TMP_DIR=/home/blast/tmp
 
 # Prepare environment
 sudo apt-get update \
@@ -6,29 +7,35 @@ sudo apt-get update \
   && sudo apt-get clean
 
 # Install TA-lib
-cp build_helpers/* /tmp/
-cd /tmp && /tmp/install_ta-lib.sh && rm -r /tmp/*ta-lib*
+cd /build_helpers && sudo ./install_ta-lib.sh
 
-# Install dependencies
-pip install --upgrade pip wheel
+cd ..
+
 curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf >> rustup-install.sh
 chmod +x rustup-install.sh
 ./rustup-install.sh -y
-. "$HOME/.cargo/env"
-pip install --user --no-cache-dir polars 
-pip install --user --no-cache-dir numpy
-pip install --user --no-cache-dir -r requirements-hyperopt.txt
 
-pip install -e . --user --no-cache-dir --no-build-isolation \
-  && mkdir /freqtrade/user_data/ \
-  && freqtrade install-ui
+export PATH="$HOME/.cargo/bin:$PATH"
+
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies
+pip3 install --upgrade wheel setuptools
+pip3 install --no-cache-dir polars 
+pip3 install --no-cache-dir numpy
+pip3 install --no-cache-dir -r requirements-hyperopt.txt
+
+pip3 install -e . --no-cache-dir --no-build-isolation
+mkdir /freqtrade/user_data/
+pip3 freqtrade install-ui
 
 
-pip install -r requirements-freqai.txt --user --no-cache-dir
+pip3 install -r requirements-freqai.txt --no-cache-dir
 
 requirements-freqai-rl.txt /freqtrade/
 
-pip install -r requirements-freqai-rl.txt --user --no-cache-dir
+pip3 install -r requirements-freqai-rl.txt --no-cache-dir
 
-pip install tensorflow PyWavelets torch darts multiprocess finta tqdm keras --user --no-cache-dir
+pip3 install tensorflow PyWavelets torch darts multiprocess finta tqdm keras --no-cache-dir
 
