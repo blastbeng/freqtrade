@@ -32,9 +32,19 @@ COPY build_helpers/* /tmp/
 RUN cd /tmp && /tmp/install_ta-lib.sh && rm -r /tmp/*ta-lib*
 ENV LD_LIBRARY_PATH /usr/local/lib
 
+
+
 # Install dependencies
 COPY --chown=ftuser:ftuser requirements.txt requirements-hyperopt.txt /freqtrade/
+
 USER ftuser
+
+RUN curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf >> rustup-install.sh
+RUN chmod +x rustup-install.sh
+RUN ./rustup-install.sh -y
+RUN . "$HOME/.cargo/env"
+RUN pip install --user --no-cache-dir polars 
+
 RUN  pip install --user --no-cache-dir numpy \
   && pip install --user --no-cache-dir -r requirements-hyperopt.txt
 
@@ -52,6 +62,15 @@ COPY --chown=ftuser:ftuser . /freqtrade/
 RUN pip install -e . --user --no-cache-dir --no-build-isolation \
   && mkdir /freqtrade/user_data/ \
   && freqtrade install-ui
+
+COPY requirements-freqai.txt /freqtrade/
+
+RUN pip install -r requirements-freqai.txt --user --no-cache-dir
+
+COPY requirements-freqai-rl.txt /freqtrade/
+
+RUN pip install -r requirements-freqai-rl.txt --user --no-cache-dir
+
 
 ENTRYPOINT ["freqtrade"]
 # Default to trade mode
